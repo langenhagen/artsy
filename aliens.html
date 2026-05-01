@@ -123,6 +123,35 @@
             0%, 100% { transform: rotate(-3deg); }
             50%      { transform: rotate(3deg); }
         }
+
+        /* Tiny moon orbits along the ring of the ringed planet.
+           The ring is centered at (1950, 180) with rx=80, ry=14.
+           Animate cx/cy via a transform on a group whose origin is
+           the ring center; rotate the group and offset the moon to
+           the ring radius, then counter-skew with ry/rx to flatten
+           the orbit into the ellipse. We instead drive cx/cy directly
+           from JS for accuracy. The element is just styled here. */
+        #ring-moon {
+            /* drawn by JS each frame */
+        }
+
+        /* Shooting star: a small bright dot with a fading tail.
+           Travels diagonally across the sky, then waits, then
+           repeats at a different y. Animated via JS so we can vary
+           start/end positions; CSS only handles the appearance. */
+        .shooting-star {
+            /* opacity is driven by JS via the SVG attribute. Avoid setting
+               opacity here in CSS because CSS would override the SVG
+               presentation attribute. */
+        }
+        .shooting-star .ss-head {
+            fill: #ffffff;
+        }
+        .shooting-star .ss-tail {
+            stroke: #ffffff;
+            stroke-linecap: round;
+            fill: none;
+        }
     </style>
 </head>
 <body>
@@ -266,6 +295,22 @@
                 <circle cx="1950" cy="180" r="40" fill="#d9b8e8" stroke="#000" stroke-width="3" />
                 <circle cx="1940" cy="175" r="6" fill="#a87ec0" stroke="none" />
                 <circle cx="1965" cy="190" r="8" fill="#a87ec0" stroke="none" />
+            </g>
+            <!-- Tiny moon orbiting along the ring of the ringed planet.
+                 Position is updated each frame from JS so it traces the
+                 ellipse exactly. Drawn after #moon-small so it sits on
+                 top when in front, and we'll fade/scale it slightly when
+                 behind to suggest depth. -->
+            <circle id="ring-moon" cx="2030" cy="180" r="6"
+                    fill="#fff4d6" stroke="#000" stroke-width="2" />
+
+            <!-- Shooting star: head + tail. Position and opacity driven
+                 by JS so we can re-fire periodically along varied paths. -->
+            <g id="shooting-star" class="shooting-star" opacity="0">
+                <line class="ss-tail" x1="0" y1="0" x2="-90" y2="30" stroke-width="5" />
+                <line class="ss-tail" x1="0" y1="0" x2="-60" y2="20" stroke-width="2.5" stroke="#ffe8a8" />
+                <circle class="ss-head" cx="0" cy="0" r="5" />
+                <circle class="ss-head" cx="0" cy="0" r="2" fill="#ffe8a8" />
             </g>
 
             <!-- 4. FAR MOUNTAIN SILHOUETTE: low rolling hills, dark purple -->
@@ -1253,6 +1298,109 @@
     }
     alignAliensHorizon();
     window.addEventListener('resize', alignAliensHorizon);
+
+    // ===================================================================
+    // Tiny moon orbits along the ring of the ringed planet.
+    // Ring center (1950, 180), rx=80, ry=14. Use angle to compute
+    // position. To suggest depth, scale the moon slightly smaller when
+    // it's on the far side (top half of orbit, since the ring is viewed
+    // edge-on with a slight tilt) and slightly larger on the near side.
+    // ===================================================================
+    const ringMoonEl = document.getElementById('ring-moon');
+    const RING_CX = 1950, RING_CY = 180, RING_RX = 80, RING_RY = 14;
+    function animateRingMoon(nowSec) {
+        // Period: ~6 seconds per orbit.
+        const angle = (nowSec / 6) * Math.PI * 2;
+        const x = RING_CX + Math.cos(angle) * RING_RX;
+        const y = RING_CY + Math.sin(angle) * RING_RY;
+        // Far side of orbit when sin(angle) < 0 (top half: ring tilts so
+        // bottom is in front of the planet, top is behind).
+        const onFarSide = Math.sin(angle) < 0;
+        // Hide entirely when behind the planet disk: on far side AND
+        // within the planet's projected radius.
+        const PLANET_R = 40;
+        const dx = x - RING_CX;
+        const behind = onFarSide && Math.abs(dx) < PLANET_R;
+        // Near side gets larger and brighter; far side smaller and faded.
+        const nearness = (Math.sin(angle) + 1) / 2; // 0..1
+        const r = 4 + nearness * 3; // 4..7
+        const opacity = behind ? 0 : (0.55 + nearness * 0.45);
+        ringMoonEl.setAttribute('cx', x.toFixed(2));
+        ringMoonEl.setAttribute('cy', y.toFixed(2));
+        ringMoonEl.setAttribute('r', r.toFixed(2));
+        ringMoonEl.setAttribute('opacity', opacity.toFixed(2));
+    }
+
+    // ===================================================================
+    // Shooting star: occasional diagonal streak across the sky.
+    // Each run picks a random start point near the top of the sky
+    // (within world viewBox 0..3000 x, -400..200 y) and a direction
+    // mostly down-and-to-the-right or down-and-to-the-left. The streak
+    // lasts ~0.9s with fade in/out, then waits 6-14s before next run.
+    // ===================================================================
+    const shootingStar = document.getElementById('shooting-star');
+    const ssTails = shootingStar.querySelectorAll('.ss-tail');
+    let ssState = null;
+    function scheduleShootingStar() {
+        const wait = 6000 + Math.random() * 8000;
+        setTimeout(launchShootingStar, wait);
+    }
+    function launchShootingStar() {
+        const dir = Math.random() < 0.5 ? 1 : -1;
+        const startX = dir === 1
+            ? 100 + Math.random() * 800
+            : 2100 + Math.random() * 800;
+        const startY = -200 + Math.random() * 300; // between -200 and 100
+        const dist = 700 + Math.random() * 400;
+        const angleDeg = 18 + Math.random() * 14; // shallow downward
+        const rad = (angleDeg * Math.PI) / 180;
+        const dx = Math.cos(rad) * dist * dir;
+        const dy = Math.sin(rad) * dist;
+        const endX = startX + dx;
+        const endY = startY + dy;
+        // Tails point opposite to motion direction. Outer tail is longer/wider.
+        const outerLen = 100;
+        const innerLen = 60;
+        const tdx = -Math.cos(rad) * dir;
+        const tdy = -Math.sin(rad);
+        ssTails[0].setAttribute('x2', (tdx * outerLen).toFixed(2));
+        ssTails[0].setAttribute('y2', (tdy * outerLen).toFixed(2));
+        ssTails[1].setAttribute('x2', (tdx * innerLen).toFixed(2));
+        ssTails[1].setAttribute('y2', (tdy * innerLen).toFixed(2));
+        ssState = {
+            startTime: performance.now(),
+            duration: 800 + Math.random() * 400,
+            startX, startY, endX, endY,
+        };
+    }
+    function animateShootingStar(nowMs) {
+        if (!ssState) return;
+        const t = (nowMs - ssState.startTime) / ssState.duration;
+        if (t >= 1) {
+            shootingStar.setAttribute('opacity', '0');
+            ssState = null;
+            scheduleShootingStar();
+            return;
+        }
+        const x = ssState.startX + (ssState.endX - ssState.startX) * t;
+        const y = ssState.startY + (ssState.endY - ssState.startY) * t;
+        // Fade in fast, fade out toward the end.
+        let op;
+        if (t < 0.15) op = t / 0.15;
+        else if (t > 0.75) op = (1 - t) / 0.25;
+        else op = 1;
+        shootingStar.setAttribute('opacity', op.toFixed(2));
+        shootingStar.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
+    }
+    scheduleShootingStar();
+
+    // Drive both from rAF.
+    function skyFrame(ts) {
+        animateRingMoon(ts / 1000);
+        animateShootingStar(ts);
+        requestAnimationFrame(skyFrame);
+    }
+    requestAnimationFrame(skyFrame);
     </script>
 </body>
 </html>
