@@ -43,12 +43,12 @@
         svg.scene  { z-index: 1; pointer-events: none; }
 
         /* Per-alien sway/breathe. Each alien root has class .alien-root
-           and its own .body-anim child. Use CSS variables so each alien
-           can have a slightly different timing for variety. */
+           and its own .body-anim child, with per-alien timing overrides
+           for variety. */
         .alien-root {
             transform-box: fill-box;
             transform-origin: 50% 95%;
-            animation: sway var(--sway-dur, 6s) ease-in-out infinite;
+            animation: sway 6s ease-in-out infinite;
         }
         .alien-root.a1 { animation-duration: 6s; }
         .alien-root.a2 { animation-duration: 7s; }
@@ -61,7 +61,7 @@
         .body-anim {
             transform-box: fill-box;
             transform-origin: 50% 95%;
-            animation: breathe var(--breathe-dur, 3.5s) ease-in-out infinite;
+            animation: breathe 3.5s ease-in-out infinite;
         }
         .a1 .body-anim { animation-duration: 4s; }
         .a2 .body-anim { animation-duration: 3.5s; }
@@ -72,7 +72,7 @@
         }
 
         .alien-root.twitch {
-            animation: sway var(--sway-dur, 6s) ease-in-out infinite, shake 0.25s linear;
+            animation: sway 6s ease-in-out infinite, shake 0.25s linear;
         }
         @keyframes shake {
             0%, 100% { translate: 0 0; }
@@ -125,25 +125,16 @@
         }
 
         /* Tiny moon orbits along the ring of the ringed planet.
-           The ring is centered at (1950, 180) with rx=80, ry=14.
-           Animate cx/cy via a transform on a group whose origin is
-           the ring center; rotate the group and offset the moon to
-           the ring radius, then counter-skew with ry/rx to flatten
-           the orbit into the ellipse. We instead drive cx/cy directly
-           from JS for accuracy. The element is just styled here. */
-        #ring-moon {
-            /* drawn by JS each frame */
-        }
+           Position is computed in JS each frame (animateRingMoon) so it
+           traces the ring's ellipse exactly. No CSS needed. */
 
         /* Shooting star: a small bright dot with a fading tail.
            Travels diagonally across the sky, then waits, then
-           repeats at a different y. Animated via JS so we can vary
-           start/end positions; CSS only handles the appearance. */
-        .shooting-star {
-            /* opacity is driven by JS via the SVG attribute. Avoid setting
-               opacity here in CSS because CSS would override the SVG
-               presentation attribute. */
-        }
+           repeats. Position and opacity are driven by JS via SVG
+           attributes; CSS sets default colors only.
+           Note: do NOT set `opacity` on .shooting-star here, because a
+           CSS opacity rule would override the SVG `opacity` attribute
+           that JS animates. */
         .shooting-star .ss-head {
             fill: #ffffff;
         }
@@ -505,7 +496,7 @@
         <!-- ============ ALIEN 1: Original monster (left cell) ============ -->
         <g transform="translate(0,0)">
         <g class="alien-root a1" id="root-a1">
-            <g class="body-anim" id="bodyAnim-a1">
+            <g class="body-anim">
                 <path id="bodyPath-a1" fill="#3ec5d6" stroke="#000" stroke-width="5"
                       stroke-linejoin="round" stroke-linecap="round" />
 
@@ -533,7 +524,7 @@
                 </g>
 
                 <!-- tentacle dots -->
-                <g id="tentacleDots-a1" clip-path="url(#bodyClip-a1)" stroke="none" fill="#ff5fa8">
+                <g clip-path="url(#bodyClip-a1)" stroke="none" fill="#ff5fa8">
                     <circle id="a1-r4-dot-0" r="6" />
                     <circle id="a1-r4-dot-1" r="8" />
                     <circle id="a1-r4-dot-2" r="6" />
@@ -544,7 +535,7 @@
 
                 <!-- 5 eyes -->
                 <g class="eyes" id="eyes-a1" stroke="#000" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" fill="none">
-                    <g class="eye" data-alien="a1" data-eye="0">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 345 200
                             C 332 178, 348 148, 378 148
@@ -555,7 +546,7 @@
                         <path class="eye-base" d="M 345 222 C 362 234, 398 234, 414 218" />
                         <circle class="pupil" cx="375" cy="218" r="7.5" fill="#000" stroke="none" />
                     </g>
-                    <g class="eye" data-alien="a1" data-eye="1">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 422 232
                             C 410 210, 425 180, 455 180
@@ -566,7 +557,7 @@
                         <path class="eye-base" d="M 422 252 C 440 264, 476 264, 492 248" />
                         <circle class="pupil" cx="452" cy="248" r="7.5" fill="#000" stroke="none" />
                     </g>
-                    <g class="eye" data-alien="a1" data-eye="2">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 478 178
                             C 466 156, 482 126, 512 126
@@ -577,7 +568,7 @@
                         <path class="eye-base" d="M 478 198 C 496 210, 532 210, 548 194" />
                         <circle class="pupil" cx="511" cy="194" r="8" fill="#000" stroke="none" />
                     </g>
-                    <g class="eye" data-alien="a1" data-eye="3">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 542 208
                             C 530 186, 545 156, 575 156
@@ -588,7 +579,7 @@
                         <path class="eye-base" d="M 542 228 C 560 240, 596 240, 612 224" />
                         <circle class="pupil" cx="572" cy="224" r="7.5" fill="#000" stroke="none" />
                     </g>
-                    <g class="eye" data-alien="a1" data-eye="4">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 605 222
                             C 593 200, 608 170, 638 170
@@ -610,7 +601,7 @@
         <!-- ============ ALIEN 2: Squidly (middle cell), translated +1000 ============ -->
         <g transform="translate(1000,0)">
         <g class="alien-root a2" id="root-a2">
-            <g class="body-anim" id="bodyAnim-a2">
+            <g class="body-anim">
                 <path id="bodyPath-a2" fill="#e84aa6" stroke="#000" stroke-width="5"
                       stroke-linejoin="round" stroke-linecap="round" />
 
@@ -630,7 +621,7 @@
                     <circle cx="475" cy="820" r="13" />
                 </g>
 
-                <g id="tentacleDots-a2" clip-path="url(#bodyClip-a2)" stroke="none" fill="#7ed957">
+                <g clip-path="url(#bodyClip-a2)" stroke="none" fill="#7ed957">
                     <circle id="a2-t0-dot-0" r="6" />
                     <circle id="a2-t0-dot-1" r="8" />
                     <circle id="a2-t1-dot-0" r="6" />
@@ -641,7 +632,7 @@
                 </g>
 
                 <g class="eyes" id="eyes-a2" stroke="#000" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" fill="none">
-                    <g class="eye" data-alien="a2" data-eye="0">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 470 235
                             C 462 215, 472 188, 495 188
@@ -652,7 +643,7 @@
                         <path class="eye-base" d="M 470 252 C 484 264, 514 264, 528 248" />
                         <circle class="pupil" cx="498" cy="216" r="7" fill="#000" stroke="none" />
                     </g>
-                    <g class="eye" data-alien="a2" data-eye="1">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 462 350
                             C 454 328, 466 302, 490 302
@@ -663,7 +654,7 @@
                         <path class="eye-base" d="M 462 368 C 478 380, 510 380, 524 364" />
                         <circle class="pupil" cx="495" cy="332" r="7.5" fill="#000" stroke="none" />
                     </g>
-                    <g class="eye" data-alien="a2" data-eye="2">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 470 462
                             C 462 442, 472 416, 495 416
@@ -685,7 +676,7 @@
         <!-- ============ ALIEN 3: Blobby (right cell), translated +2000 ============ -->
         <g transform="translate(2000,0)">
         <g class="alien-root a3" id="root-a3">
-            <g class="body-anim" id="bodyAnim-a3">
+            <g class="body-anim">
                 <path id="bodyPath-a3" fill="#9a4dd6" stroke="#000" stroke-width="5"
                       stroke-linejoin="round" stroke-linecap="round" />
 
@@ -706,13 +697,13 @@
                     <circle cx="570" cy="600" r="8" />
                 </g>
 
-                <g id="legDots-a3" clip-path="url(#bodyClip-a3)" stroke="none" fill="#ff8c2a">
+                <g clip-path="url(#bodyClip-a3)" stroke="none" fill="#ff8c2a">
                     <circle id="a3-lL-dot-0" r="7" />
                     <circle id="a3-lR-dot-0" r="7" />
                 </g>
 
                 <g class="eyes" id="eyes-a3" stroke="#000" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" fill="none">
-                    <g class="eye" data-alien="a3" data-eye="0">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 305 380
                             C 295 358, 308 330, 335 330
@@ -723,7 +714,7 @@
                         <path class="eye-base" d="M 305 400 C 322 412, 358 412, 372 396" />
                         <circle class="pupil" cx="338" cy="362" r="7.5" fill="#000" stroke="none" />
                     </g>
-                    <g class="eye" data-alien="a3" data-eye="1">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 410 320
                             C 400 296, 414 268, 442 268
@@ -734,7 +725,7 @@
                         <path class="eye-base" d="M 410 340 C 428 354, 466 354, 482 338" />
                         <circle class="pupil" cx="445" cy="300" r="8" fill="#000" stroke="none" />
                     </g>
-                    <g class="eye" data-alien="a3" data-eye="2">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 522 320
                             C 514 296, 528 268, 558 268
@@ -745,7 +736,7 @@
                         <path class="eye-base" d="M 522 340 C 540 354, 578 354, 594 338" />
                         <circle class="pupil" cx="557" cy="300" r="8" fill="#000" stroke="none" />
                     </g>
-                    <g class="eye" data-alien="a3" data-eye="3">
+                    <g class="eye">
                         <path class="eye-sclera" fill="#fafafa" d="
                             M 632 380
                             C 624 358, 637 330, 665 330
@@ -1334,9 +1325,10 @@
     // ===================================================================
     // Shooting star: occasional diagonal streak across the sky.
     // Each run picks a random start point near the top of the sky
-    // (within world viewBox 0..3000 x, -400..200 y) and a direction
-    // mostly down-and-to-the-right or down-and-to-the-left. The streak
-    // lasts ~0.9s with fade in/out, then waits 6-14s before next run.
+    // (world coords: x in 100..900 or 2100..2900, y in -200..100) and a
+    // shallow downward direction (left-to-right or right-to-left). The
+    // streak lasts ~0.8-1.2s with fade in/out, then waits 6-14s before
+    // the next one.
     // ===================================================================
     const shootingStar = document.getElementById('shooting-star');
     const ssTails = shootingStar.querySelectorAll('.ss-tail');

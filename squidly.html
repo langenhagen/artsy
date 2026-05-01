@@ -94,7 +94,7 @@
                 </g>
 
                 <!-- tentacle dots: positioned per-frame -->
-                <g id="tentacleDots" clip-path="url(#bodyClip)" stroke="none" fill="#7ed957">
+                <g clip-path="url(#bodyClip)" stroke="none" fill="#7ed957">
                     <circle id="t0-dot-0" r="6" />
                     <circle id="t0-dot-1" r="8" />
                     <circle id="t1-dot-0" r="6" />
@@ -107,7 +107,7 @@
                 <!-- Eyes are CHILDREN of #body-anim so they breathe + sway with the body -->
                 <g id="eyes" stroke="#000" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" fill="none">
                 <!-- 3 eyes stacked vertically along the upper body, each on a base/socket -->
-                <g class="eye" data-eye="0">
+                <g class="eye">
                     <path class="eye-sclera" fill="#fafafa" d="
                         M 470 235
                         C 462 215, 472 188, 495 188
@@ -119,7 +119,7 @@
                     <path class="eye-base" d="M 470 252 C 484 264, 514 264, 528 248" />
                     <circle class="pupil" cx="498" cy="216" r="7" fill="#000" stroke="none" />
                 </g>
-                <g class="eye" data-eye="1">
+                <g class="eye">
                     <path class="eye-sclera" fill="#fafafa" d="
                         M 462 350
                         C 454 328, 466 302, 490 302
@@ -131,7 +131,7 @@
                     <path class="eye-base" d="M 462 368 C 478 380, 510 380, 524 364" />
                     <circle class="pupil" cx="495" cy="332" r="7.5" fill="#000" stroke="none" />
                 </g>
-                <g class="eye" data-eye="2">
+                <g class="eye">
                     <path class="eye-sclera" fill="#fafafa" d="
                         M 470 462
                         C 462 442, 472 416, 495 416
@@ -335,7 +335,8 @@
                 y: (def.entry.y + def.exit.y) / 2,
             };
             const ax = def.axis.x, ay = def.axis.y;
-            // perpendicular = axis rotated 90° CCW: (-ay, ax)
+            // perpendicular: (-ay, ax) — math 90° CCW from axis (in SVG's
+            // y-down coord system this appears as 90° CW visually).
             const px = -ay, py = ax;
 
             const cl = def.points.map((p, i) => {
@@ -577,19 +578,8 @@
 
         function smoothD(points) {
             if (points.length < 2) return "";
-            let d = `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
-            for (let i = 0; i < points.length - 1; i++) {
-                const p0 = points[i - 1] || points[i];
-                const p1 = points[i];
-                const p2 = points[i + 1];
-                const p3 = points[i + 2] || p2;
-                const c1x = p1.x + (p2.x - p0.x) / 6;
-                const c1y = p1.y + (p2.y - p0.y) / 6;
-                const c2x = p2.x - (p3.x - p1.x) / 6;
-                const c2y = p2.y - (p3.y - p1.y) / 6;
-                d += ` C${c1x.toFixed(2)},${c1y.toFixed(2)} ${c2x.toFixed(2)},${c2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
-            }
-            return d;
+            const d = `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
+            return d + smoothPathSuffix(points);
         }
 
         function strokeD(points, nowSec, amp, phaseOffset) {

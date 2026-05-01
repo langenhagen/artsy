@@ -69,8 +69,9 @@
 
         <g id="monster-root">
             <g id="body-anim">
-                <!-- main body silhouette: single continuous path, rebuilt each frame
-                     so finger TIPS can wiggle while the body root stays fixed -->
+                <!-- main body silhouette: single continuous path, rebuilt each
+                     frame so the tentacles can wave while the body root stays
+                     fixed. -->
                 <path id="bodyPath" fill="#b6d44a" stroke="#000" stroke-width="5"
                       stroke-linejoin="round" stroke-linecap="round" />
 
@@ -108,7 +109,7 @@
                      centerlines of each tentacle so they move with the wave.
                      IDs encode tentacle name and along-tentacle distance.
                      Clipped to body so they only appear inside the silhouette. -->
-                <g id="tentacleDots" clip-path="url(#bodyClip)" stroke="none" fill="#e84aa6">
+                <g clip-path="url(#bodyClip)" stroke="none" fill="#e84aa6">
                     <circle id="r4-dot-0" r="9" />
                     <circle id="r4-dot-1" r="6" />
                     <circle id="r4-dot-2" r="7" />
@@ -131,7 +132,7 @@
                      out of the head, not a teardrop melting into it.
                      Layout: leftmost eye, drooping eye low-left, high
                      center eye, upper-right eye, rightmost eye. -->
-                <g class="eye" data-eye="0">
+                <g class="eye">
                     <!-- eye bulb centered ~(372, 222) -->
                     <path class="eye-sclera" fill="#fafafa" d="
                         M 348 240
@@ -145,7 +146,7 @@
                     <path class="eye-base" d="M 348 252 C 360 264, 388 264, 400 248" />
                     <circle class="pupil" cx="375" cy="218" r="7" fill="#000" stroke="none" />
                 </g>
-                <g class="eye" data-eye="1">
+                <g class="eye">
                     <!-- drooping low: bulb at ~(450, 252) -->
                     <path class="eye-sclera" fill="#fafafa" d="
                         M 422 274
@@ -158,7 +159,7 @@
                     <path class="eye-base" d="M 422 286 C 436 300, 466 300, 482 282" />
                     <circle class="pupil" cx="452" cy="248" r="8" fill="#000" stroke="none" />
                 </g>
-                <g class="eye" data-eye="2">
+                <g class="eye">
                     <!-- high center: bulb at ~(508, 196) -->
                     <path class="eye-sclera" fill="#fafafa" d="
                         M 484 218
@@ -171,7 +172,7 @@
                     <path class="eye-base" d="M 484 232 C 496 244, 524 244, 538 226" />
                     <circle class="pupil" cx="511" cy="194" r="7" fill="#000" stroke="none" />
                 </g>
-                <g class="eye" data-eye="3">
+                <g class="eye">
                     <!-- upper right: bulb at ~(570, 226) -->
                     <path class="eye-sclera" fill="#fafafa" d="
                         M 546 244
@@ -184,7 +185,7 @@
                     <path class="eye-base" d="M 546 258 C 558 270, 586 270, 598 254" />
                     <circle class="pupil" cx="572" cy="224" r="7" fill="#000" stroke="none" />
                 </g>
-                <g class="eye" data-eye="4">
+                <g class="eye">
                     <!-- rightmost: bulb at ~(632, 240) -->
                     <path class="eye-sclera" fill="#fafafa" d="
                         M 610 258
@@ -206,16 +207,15 @@
         // -------------------------------------------------------------
         // Body silhouette as a parameterized list of cubic segments.
         // Each segment: {c1, c2, p}  representing a "C c1 c2 p" continuation.
-        // Path starts at startPoint, then walks segments in order.
-        // Some points are "tips" - they get a wiggle offset applied per frame.
-        // The wiggle of each tip blends with its neighboring control points
-        // so the curve stays smooth and the root stays anchored.
+        // Path starts at startPoint, then walks segments in order. The two
+        // tentacles are spliced into the body path between segments so the
+        // outline is one continuous closed curve.
         // -------------------------------------------------------------
         const startPoint = { x: 500, y: 170 };
 
-        // Helper to make a segment with optional tip id
-        function S(c1x, c1y, c2x, c2y, px, py, tip) {
-            return { c1:{x:c1x,y:c1y}, c2:{x:c2x,y:c2y}, p:{x:px,y:py}, tip: tip || null };
+        // Helper to make a cubic-bezier segment.
+        function S(c1x, c1y, c2x, c2y, px, py) {
+            return { c1:{x:c1x,y:c1y}, c2:{x:c2x,y:c2y}, p:{x:px,y:py} };
         }
 
         // Body silhouette walks CLOCKWISE from top-center.
@@ -234,18 +234,9 @@
         // axis. Then the tentacle's top/bottom edges flow continuously out of
         // and back into the body outline - no visible seam.
         //
-        // Tentacle root spans a full ~base-thickness gap on the body wall:
-        //   right tentacle: entry (635, 425), exit (635, 463)  (gap = 38px = base thickness)
-        //   left  tentacle: entry (365, 463), exit (365, 425)
-        // Tentacle entry/exit on body wall:
+        // Tentacle entry/exit on body wall (gap = 60px = base thickness):
         //   right: entry (660, 415), exit (660, 475)  - axis +x
         //   left:  entry (340, 475), exit (340, 415)  - axis -x
-        // With base thickness 60 and entry/exit gap 60, the tentacle's first
-        // top-edge point sits at (entry.x + axisStep, entry.y) - same y as
-        // entry. So the tentacle leaves entry horizontally. The body wall
-        // approaching entry must have its tangent ALSO horizontal at entry,
-        // which we get by placing c2 horizontally aligned with entry's y but
-        // to its LEFT.
         const segmentsTopRight = [
             // top-right corner of HEAD
             S(595, 170, 660, 185, 685, 230),
@@ -285,8 +276,7 @@
             S(340, 185, 405, 170, 500, 170),
         ];
 
-        // Rendering: emit segments with tip-offset support (kept for parity even
-        // though we have no fingers now; tipNames is empty so this is inert).
+        // Rendering: emit segments as cubic-bezier continuations of the path.
         function emitSegments(arr, d) {
             for (const seg of arr) {
                 d += ` C${seg.c1.x.toFixed(2)},${seg.c1.y.toFixed(2)} ${seg.c2.x.toFixed(2)},${seg.c2.y.toFixed(2)} ${seg.p.x.toFixed(2)},${seg.p.y.toFixed(2)}`;
@@ -399,7 +389,7 @@
                 // along-axis component is p.d, perpendicular component is lateral
                 const cx = base.x + ax * p.d + px * lateral;
                 const cy = base.y + ay * p.d + py * lateral;
-                return { x: cx, y: cy, th: p.th, lat: lateral };
+                return { x: cx, y: cy, th: p.th };
             });
 
             // Compute local tangents along the displaced centerline (for
@@ -462,9 +452,6 @@
 
             return smoothPathSuffix(polyline);
         }
-
-        // tipNames kept for parity (no fingers anymore)
-        const tipNames = [];
 
         function buildBodyD(nowSec) {
             let d = `M${startPoint.x},${startPoint.y}`;
@@ -687,19 +674,8 @@
 
         function smoothD(points) {
             if (points.length < 2) return "";
-            let d = `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
-            for (let i = 0; i < points.length - 1; i++) {
-                const p0 = points[i - 1] || points[i];
-                const p1 = points[i];
-                const p2 = points[i + 1];
-                const p3 = points[i + 2] || p2;
-                const c1x = p1.x + (p2.x - p0.x) / 6;
-                const c1y = p1.y + (p2.y - p0.y) / 6;
-                const c2x = p2.x - (p3.x - p1.x) / 6;
-                const c2y = p2.y - (p3.y - p1.y) / 6;
-                d += ` C${c1x.toFixed(2)},${c1y.toFixed(2)} ${c2x.toFixed(2)},${c2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
-            }
-            return d;
+            const d = `M${points[0].x.toFixed(2)},${points[0].y.toFixed(2)}`;
+            return d + smoothPathSuffix(points);
         }
 
         function strokeD(points, nowSec, amp, phaseOffset) {
