@@ -1,0 +1,28 @@
+{
+  "name": "playground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint:js": "eslint \"**/*.js\" --no-error-on-unmatched-pattern",
+    "lint:css": "stylelint \"**/*.{css,html}\"",
+    "lint:html": "html-validate \"**/*.html\"",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.3.0",
+    "globals": "^17.6.0",
+    "html-validate": "^10.13.1",
+    "postcss-html": "^1.8.1",
+    "prettier": "^3.8.3",
+    "stylelint": "^17.9.1",
+    "stylelint-config-standard": "^40.0.0"
+  }
+}
