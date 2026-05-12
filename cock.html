@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="only light" />
+    <title>Cock</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      html {
+        color-scheme: only light;
+      }
+      body {
+        background: #fff;
+        overflow: hidden;
+      }
+      svg {
+        display: block;
+        width: 100vw;
+        height: 100dvh;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <svg viewBox="0 0 1000 1300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e18d42" />
+          <stop offset="55%" stop-color="#cb5b7a" />
+          <stop offset="100%" stop-color="#ad2f76" />
+        </linearGradient>
+      </defs>
+
+      <!-- body triangle -->
+      <path
+        d="M 500 110 L 740 1220 L 210 1220 Z"
+        fill="url(#bodyGrad)"
+        stroke="#7f1d58"
+        stroke-width="12"
+        stroke-linejoin="round"
+      />
+
+      <!-- beak triangle in front -->
+      <path
+        d="M 520 390 L 850 330 L 535 485 Z"
+        fill="#f2ba2f"
+        stroke="#7f1d58"
+        stroke-width="10"
+        stroke-linejoin="round"
+      />
+
+      <!-- beak detail lines -->
+      <line x1="550" y1="402" x2="785" y2="350" stroke="#7f1d58" stroke-width="6" stroke-linecap="round" />
+      <line x1="555" y1="442" x2="770" y2="375" stroke="#7f1d58" stroke-width="6" stroke-linecap="round" />
+
+      <!-- eyes -->
+      <circle cx="490" cy="350" r="12" fill="#2d1024" />
+      <circle cx="530" cy="352" r="9" fill="#2d1024" />
+    </svg>
+  </body>
+</html>
