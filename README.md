@@ -1,4 +1,5 @@
-# Playground
+# Artsy
+Artsy playground.
 
 
 ## Useful Commands
